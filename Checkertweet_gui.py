@@ -19,22 +19,22 @@ class SentimentAnalysis:
         auth = tweepy.OAuthHandler(consumerKey, consumerSecret)
         auth.set_access_token(accessToken, accessTokenSecret)
         api = tweepy.API(auth)
-        sg.theme('DarkAmber')	# Add a touch of color
-        # All the stuff inside your window.
-        layout = [  
+        sg.theme('SystemDefaultForReal')	
+        
+        layout = [  [sg.Text('Please keep an eye on the command line for the result')],
                     [sg.Text('Enter hashtag value'), sg.InputText()],
                     [sg.Button('Ok'), sg.Button('Cancel')] ]
         
         # Create the Window
         
         # Event Loop to process "events" and get the "values" of the inputs
-        window = sg.Window('SENTIMETER', layout)    
+        window = sg.Window('***SENTIMETER***', layout)    
 
         event, values = window.read()    
         window.close()
         
         searchTerm = values[0]
-        NoOfTerms = 10
+        NoOfTerms = 100
 
         self.tweets = tweepy.Cursor(api.search, q=searchTerm, lang = "en").items(NoOfTerms)
 
@@ -93,43 +93,48 @@ class SentimentAnalysis:
         wnegative = self.percentage(wnegative, NoOfTerms)
         snegative = self.percentage(snegative, NoOfTerms)
         neutral = self.percentage(neutral, NoOfTerms)
-
+        result=""
         # finding average reaction
         polarity = polarity / NoOfTerms
-
-        # printing out data
-        print("How people are reacting on " + searchTerm + " by analyzing " + str(NoOfTerms) + " tweets.")
-        print()
-        print("General Report: ")
-
         if (polarity == 0):
-            print("Neutral")
+            result="Neutral"
         elif (polarity > 0 and polarity <= 0.3):
-            print("Weakly Positive")
+            result="Weakly Positive"
         elif (polarity > 0.3 and polarity <= 0.6):
-            print("Positive")
+            result="Positive"
         elif (polarity > 0.6 and polarity <= 1):
-            print("Strongly Positive")
+            result="Strongly Positive"
         elif (polarity > -0.3 and polarity <= 0):
-            print("Weakly Negative")
+            result="Weakly Negative"
         elif (polarity > -0.6 and polarity <= -0.3):
-            print("Negative")
+            result="Negative"
         elif (polarity > -1 and polarity <= -0.6):
-            print("Strongly Negative")
+            result="Strongly Negative"
+        # printing out data
+        sa.plotPieChart(positive, wpositive, spositive, negative, wnegative, snegative, neutral, searchTerm, NoOfTerms)
+        sa.posttweet(searchTerm,NoOfTerms,polarity,positive, wpositive, spositive, negative, wnegative, snegative, neutral,result)
 
-        print()
-        print("Detailed Report: ")
-        print(str(positive) + "% people thought it was positive")
-        print(str(wpositive) + "% people thought it was weakly positive")
-        print(str(spositive) + "% people thought it was strongly positive")
-        print(str(negative) + "% people thought it was negative")
-        print(str(wnegative) + "% people thought it was weakly negative")
-        print(str(snegative) + "% people thought it was strongly negative")
-        print(str(neutral) + "% people thought it was neutral")
-
-        self.plotPieChart(positive, wpositive, spositive, negative, wnegative, snegative, neutral, searchTerm, NoOfTerms)
-
-
+    def posttweet(self,searchTerm,NoOfTerms,polarity,positive, wpositive, spositive, negative, wnegative, snegative, neutral,result):
+        sg.theme('SystemDefaultForReal')
+        layout = [[sg.Text("How people are reacting on " + searchTerm + " by analyzing " + str(NoOfTerms) + " tweets.")],              
+                [sg.Text("General Report: \n"+result)],
+                
+                   [sg.Text('Detailed Report: ')],
+                [sg.Text(str(positive) + "% people thought it was positive")],
+                [sg.Text(str(wpositive) + "% people thought it was weakly positive")],
+                [sg.Text(str(spositive) + "% people thought it was strongly positive")],
+                [sg.Text(str(negative) + "% people thought it was negative")],
+                [sg.Text(str(wnegative) + "% people thought it was weakly negative")],
+                [sg.Text(str(snegative) + "% people thought it was strongly negative")],
+                [sg.Text(str(neutral) + "% people thought it was neutral")],
+                
+                [sg.Button('Ok')] ]
+        window = sg.Window('***SENTIMETER_Result***', layout)    
+        event, values = window.read()
+        window.close()
+       
+        
+        window.close()
     def cleanTweet(self, tweet):
         # Remove Links, Special Characters etc from tweet
         return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t]) | (\w +:\ / \ / \S +)", " ", tweet).split())
@@ -155,4 +160,5 @@ class SentimentAnalysis:
 
 if __name__== "__main__":
     sa = SentimentAnalysis()
-    sg.sa.DownloadData()
+    sa.DownloadData()
+    
